@@ -115,7 +115,7 @@ async function Login(e) {
     message.textContent = "Login Successful";
     message.style.color = "Green";
     setTimeout(() => {
-      window.location.href = "homepage.html";
+      window.location.href = "../homepage.html";
     }, 1000);
   } catch (error) {
     message.style.color = "Red";
