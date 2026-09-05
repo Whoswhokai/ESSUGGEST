@@ -142,7 +142,13 @@ async function SignUp(e) {
   }
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
+  const originalBtnText = submitBtn ? submitBtn.textContent : "";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Creating account...";
+  }
+  message.textContent = "Creating your account, please wait...";
+  message.style.color = "Gray";
 
   try {
     // --- Step 1: Create the Auth account ---
@@ -159,9 +165,11 @@ async function SignUp(e) {
 
     message.textContent = "Account created successfully";
     message.style.color = "Green";
+    if (submitBtn) submitBtn.textContent = "Redirecting to login...";
+
     setTimeout(() => {
       window.location.href = "../auth/Login.html";
-    }, 1000);
+    }, 500);
   } catch (error) {
     message.style.color = "Red";
     switch (error.code) {
@@ -181,6 +189,7 @@ async function SignUp(e) {
         message.textContent = "Something went wrong: " + error.message;
         console.log(error);
     }
+    if (submitBtn) submitBtn.textContent = originalBtnText;
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }

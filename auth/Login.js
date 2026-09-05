@@ -89,34 +89,36 @@ async function Login(e) {
   }
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
+  const originalBtnText = submitBtn ? submitBtn.textContent : "";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Logging in...";
+  }
 
   try {
     const userCredential = await signInWithEmailAndPassword(auth, getEmail, getPass);
     const user = userCredential.user;
-
     const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
 
+    // Only await the read — we need this data before redirecting
+    const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      const userData = userSnap.data();
-      console.log("User profile:", userData);
-      sessionStorage.setItem("userProfile", JSON.stringify(userData));
+      sessionStorage.setItem("userProfile", JSON.stringify(userSnap.data()));
     } else {
       console.log("No Firestore profile found for this user yet.");
     }
 
-    await setDoc(
-      userRef,
-      { lastLogin: serverTimestamp() },
-      { merge: true }
-    );
+    // Fire-and-forget: don't make the user wait on this write
+    setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true })
+      .catch((err) => console.log("lastLogin update failed:", err));
 
     message.textContent = "Login Successful";
     message.style.color = "Green";
+    if (submitBtn) submitBtn.textContent = "Redirecting...";
+
     setTimeout(() => {
       window.location.href = "../homepage.html";
-    }, 1000);
+    }, 300);
   } catch (error) {
     message.style.color = "Red";
     switch (error.code) {
@@ -143,6 +145,7 @@ async function Login(e) {
         message.textContent = "Something went wrong: " + error.message;
         console.log(error);
     }
+    if (submitBtn) submitBtn.textContent = originalBtnText;
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
