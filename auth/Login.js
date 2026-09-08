@@ -38,10 +38,10 @@ function eye(e) {
 
   if (input.type === "password") {
     input.type = "text";
-    eyecon.innerHTML = eyeOpen;
+    eyecon.innerHTML = eyeClosed;
   } else {
     input.type = "password";
-    eyecon.innerHTML = eyeClosed;
+    eyecon.innerHTML = eyeOpen;
   }
 }
 
