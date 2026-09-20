@@ -317,3 +317,90 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   update(); // set correct state on load if the page opens mid-scroll (e.g. via anchor link)
 })();
+
+/* =========================================================================
+   3) HERO IMAGE TILT (essuggest.png)
+   ---------------------------------------------------------------------
+   The hero keyboard art tilts toward the cursor like a physical card,
+   using the exact same eased/lerp approach as the dot grid in section 1
+   above: on every mousemove we record a *target* rotation, then a
+   requestAnimationFrame loop eases the *current* rotation toward that
+   target a little each frame (EASE below controls how quickly). This
+   is deliberately the same technique as the dots rather than a plain
+   CSS :hover transform, so the two cursor-reactive effects on this
+   page feel consistent with each other instead of like two different
+   libraries bolted together.
+
+   Respects prefers-reduced-motion the same way section 1 does — for
+   anyone with that OS setting on, this whole effect is skipped and the
+   image just sits still.
+========================================================================= */
+(function heroTilt() {
+  const wrap = document.querySelector(".hero-tilt-wrap");
+  const img = document.querySelector(".hero-tilt-img");
+  if (!wrap || !img) return;
+
+  const prefersReducedMotion = window.matchMedia
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
+  if (prefersReducedMotion) return; // leave the image completely static
+
+  // ---- Tunables ---------------------------------------------------------
+  const MAX_TILT = 10;        // degrees of rotation at the very edge of the image
+  const MAX_LIFT_SCALE = 1.04; // slight scale-up while the cursor is over it
+  const EASE = 0.12;          // 0-1, lower = slower/smoother trailing motion
+
+  let target = { rx: 0, ry: 0, scale: 1 };
+  let current = { rx: 0, ry: 0, scale: 1 };
+  let rafId = null;
+  let hovering = false;
+
+  function onMouseMove(e) {
+    const rect = wrap.getBoundingClientRect();
+    const offsetX = (e.clientX - rect.left) / rect.width; // 0 (left) -> 1 (right)
+    const offsetY = (e.clientY - rect.top) / rect.height; // 0 (top) -> 1 (bottom)
+
+    // Cursor right of center -> tilt right; cursor above center -> top
+    // edge tilts toward the viewer (hence the minus sign on rx).
+    target.ry = (offsetX - 0.5) * MAX_TILT * 2;
+    target.rx = -(offsetY - 0.5) * MAX_TILT * 2;
+    target.scale = MAX_LIFT_SCALE;
+  }
+
+  function onEnter() {
+    hovering = true;
+    if (!rafId) rafId = requestAnimationFrame(tick);
+  }
+
+  function onLeave() {
+    hovering = false;
+    target = { rx: 0, ry: 0, scale: 1 };
+    // Don't stop the rAF loop here — tick() keeps it running until the
+    // image has actually eased back to neutral, otherwise it would
+    // just snap flat instead of settling smoothly.
+  }
+
+  function tick() {
+    current.rx += (target.rx - current.rx) * EASE;
+    current.ry += (target.ry - current.ry) * EASE;
+    current.scale += (target.scale - current.scale) * EASE;
+
+    img.style.transform =
+      `rotateX(${current.rx}deg) rotateY(${current.ry}deg) scale(${current.scale})`;
+
+    const settled =
+      Math.abs(current.rx) < 0.01 &&
+      Math.abs(current.ry) < 0.01 &&
+      Math.abs(current.scale - 1) < 0.001;
+
+    if (hovering || !settled) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = null;
+    }
+  }
+
+  wrap.addEventListener("mouseenter", onEnter);
+  wrap.addEventListener("mousemove", onMouseMove, { passive: true });
+  wrap.addEventListener("mouseleave", onLeave);
+})();

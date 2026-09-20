@@ -168,6 +168,43 @@ summary:focus-visible {
 }
 
 /* -----------------------------------------------------------------------
+   HERO IMAGE TILT (essuggest.png)
+   The keyboard art tilts toward the cursor like a physical card. The
+   actual rotation math lives in dotted.js (it needs the live cursor
+   position, which CSS can't read) — this just sets up the 3D staging:
+   .hero-tilt-wrap is the perspective context AND clips the slight
+   hover scale to the image's rounded corners (without overflow:hidden
+   here, a scaled-up image would spill past the rounded frame at the
+   edges). .hero-tilt-img is the element dotted.js actually rotates.
+
+   No CSS `transition` on transform here on purpose — dotted.js already
+   eases the rotation itself frame-by-frame (same lerp approach as the
+   dot grid above), and layering a CSS transition on top of that would
+   just add lag on top of lag. The box-shadow transition below is fine
+   since that only changes on hover/leave, not continuously.
+----------------------------------------------------------------------- */
+.hero-tilt-wrap {
+  perspective: 1000px;
+  overflow: hidden;
+}
+
+.hero-tilt-img {
+  transform: rotateX(0deg) rotateY(0deg) scale(1);
+  transform-style: preserve-3d;
+  will-change: transform;
+ 
+  transition: box-shadow 0.4s ease;
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-tilt-img {
+    transform: none !important;
+  }
+}
+
+/* -----------------------------------------------------------------------
    Buttons — a soft, tactile "pop" on hover/press
 ----------------------------------------------------------------------- */
 .btn-pop {

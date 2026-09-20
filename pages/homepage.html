@@ -99,12 +99,13 @@
       </div>
 
       <div class="scroll-reveal scroll-reveal-delay-1">
-        <!-- IMAGE PLACEHOLDER — drop the real hero artwork/screenshot in here -->
-        <div class="w-full aspect-4/3 rounded-3xl bg-gray-200 flex items-center justify-center">
-          <video autoplay muted loop class="rounded-3xl shadow-xl w-full h-full object-cover">
-              <source src="/assets/Mograph (2).mp4">
-              <source src="/assets/Mograph (2).webm">
-          </video>
+        <!-- Hero art (essuggest.png) tilts toward the cursor — see the
+             "HERO IMAGE TILT" section in animationLp.css and dotted.js.
+             hero-tilt-wrap provides the 3D perspective + clips the
+             slight hover scale to the rounded corners; hero-tilt-img is
+             what dotted.js actually rotates every frame. -->
+        <div class="hero-tilt-wrap w-full aspect-4/3 rounded-3xl flex items-center justify-center">
+          <img src="/assets/essuggest.png" alt="essuggest keyboard art" class="hero-tilt-img w-full h-full object-cover rounded-3xl">
         </div>
       </div>
     </section>
