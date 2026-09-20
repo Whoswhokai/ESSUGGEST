@@ -117,7 +117,7 @@ async function Login(e) {
     if (submitBtn) submitBtn.textContent = "Redirecting...";
 
     setTimeout(() => {
-      window.location.href = "../homepage.html";
+      window.location.href = "../main.html";
     }, 300);
   } catch (error) {
     message.style.color = "Red";

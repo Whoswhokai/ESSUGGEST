@@ -3,20 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/jpg" href="../assets/LOGO.png" />
-    <title>ESSUGGEST</title>
-    <link rel="stylesheet" href="../src/output.css" />
-    <link rel="stylesheet" href="../src/validation.css" />
+    <link rel="icon" type="image/jpg" href="/assets/LOGO.png" />
+    <title>ESSUGGEST | Log In</title>
+    <link rel="stylesheet" href="/src/output.css" />
+    <link rel="stylesheet" href="/src/validation.css" />
   </head>
-  <body
-    class="flex justify-center items-center min-h-screen bg-gray-200 px-4 sm:px-6 md:px-0"
-  >
-    <div class="w-110 h-130 bg-white rounded-2xl md:rounded-r-none shadow-2xl">
+  <body class="flex justify-center items-center min-h-screen bg-gray-200 px-4 sm:px-6 md:px-0">
+    <div class="relative w-110 h-130 bg-white rounded-2xl md:rounded-r-none shadow-2xl">
+
+      <a
+        href="../pages/homepage.html"
+        aria-label="Back to homepage"
+        class="absolute top-4 left-4 sm:top-5 sm:left-5 flex items-center justify-center w-9 h-9 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors duration-200"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+        </svg>
+      </a>
+
       <h1 class="text-center text-4xl font-poppins font-black mt-20">
         WELCOME
       </h1>
       <p
-        class="text-center text-sm opacity-50 mb-6 font-thin italic font-jakarta"
+        class="text-center text-sm opacity-50 mb-10 font-thin italic font-jakarta"
       >
         Log in to your account
       </p>
@@ -36,7 +45,13 @@
         </div>
 
         <div class="w-90">
+          <div class="flex justify-between items-center mb-1">
           <label for="" class="px-3 font-dm">Password</label>
+           <a
+            class="text-sm font-dm hover:underline transition- duration-300 text-gray-500"
+            href="#"
+            >Forgot password?</a>
+          </div>
           <div class="relative">
             <input
               type="password"
@@ -61,18 +76,6 @@
           </div>
         </div>
 
-        <div class="flex justify-between mb-6 w-90">
-          <label class="text-sm font-dm flex items-center gap-1.5">
-            <input type="checkbox" class="accent-green-700" />
-            Remember me
-          </label>
-
-          <a
-            class="text-sm font-dm hover:underline transition- duration-300"
-            href="#"
-            >Forgot password?</a
-          >
-        </div>
 
         <p id="message" class="font-dm font-light h-5"></p>
 
@@ -85,10 +88,10 @@
             Log In
           </button>
         </div>
-        <p class="text-center font-dm text-sm mb-10">
+        <p class="text-center font-dm text-sm mb-17">
           Don't have an account?
 
-          <a class="text-blue-500" href="../auth/SignUp.html">Sign up here.</a>
+          <a class="text-blue-500" href="/auth/SignUp.html">Sign up here.</a>
         </p>
 
         <p class="text-center text-sm font-dm">© 2026</p>
@@ -104,11 +107,11 @@
         loop
         class="w-100 absolute rounded-2xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
       >
-        <source src="/assets/ESSUGEST VIDEO.mp4" />
-        <source src="/assets/ESSUGEST VIDEO.webm" />
+        <source src="/assets/moGraph (login).mp4" />
+        <source src="/assets/moGraph (login).webm" />
       </video>
     </div>
-    <script type="module" src="../auth/Login.js" defer></script>
+    <script type="module" src="/auth/Login.js" defer></script>
 
     <!--kaiser was here-->
     

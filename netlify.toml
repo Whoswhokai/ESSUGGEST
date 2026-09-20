@@ -8,5 +8,5 @@
 
 [[redirects]]
   from = "/"
-  to = "/auth/LogIn.html"
+  to = "/pages/homepage.html"
   status = 200
