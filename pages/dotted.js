@@ -1,9 +1,11 @@
 /**
  * ESSUGGEST — dotted.js
- * Three independent pieces sharing one file since index.html only loads
+ * Independent pieces sharing one file since index.html only loads
  * one <script>:
  *   1. Magnetic dot-grid background canvas (#dots-canvas)
  *   2. Shrink-on-scroll masthead (#site-header)
+ *   3. Hero image float + tilt (essuggest.png)
+ *   4. Staff access panel (HR passcode gate, fingerprint trigger)
  */
 
 /* =========================================================================
@@ -27,6 +29,16 @@
    reacts across the smaller COLOR_INFLUENCE px — so the bump reads as
    big and soft, but only the dots right under the cursor actually
    tint green.
+
+   MOBILE PERFORMANCE: this grid can be well over a thousand dots on a
+   tall page, and the loop below used to call requestAnimationFrame
+   forever, redrawing every dot every frame even while nothing was
+   moving. That's wasted CPU/battery on phones, and the biggest source
+   of jank on lower-end devices. Now the loop stops itself once every
+   dot has eased back to rest and the pointer isn't active, and
+   restarts on the next mousemove/touchmove (with a one-frame redraw
+   forced after any resize/orientation-change rebuild, so the canvas
+   never sits blank waiting for a pointer event that may not come).
 
    ACCESSIBILITY: the pointer-reactive bulge/pull/shake is a
    motion effect that can bother people with vestibular disorders or
@@ -55,6 +67,7 @@
   const MAX_PULL = 16;   // max px a dot can be dragged toward cursor (was 16 — bigger bulge)
   const EASE = 0.1;    // 0-1, lower = slower/smoother motion
   const MAX_JITTER = 2;  // px of shake at the very center of the cursor
+  const SETTLE_EPSILON = 0.02; // below this, a dot's bulge/color are close enough to 0 to call it "at rest"
   const GLOW_COLOR = "#16A34A";  // color of dots near the cursor
   const GLOW_RGB = [22, 163, 74]; // same color as GLOW_COLOR, as RGB for lerping
   const DOT_RGB = [180, 186, 196];   // RGB of resting dots (alpha set below)
@@ -133,14 +146,23 @@
     pointer.active = true;
   }
 
+  function wake() {
+    // Restart the draw loop if it had stopped itself after settling.
+    if (!prefersReducedMotion && !rafId) {
+      rafId = requestAnimationFrame(step);
+    }
+  }
+
   function onMouseMove(e) {
     updatePointerFromEvent(e.clientX, e.clientY);
+    wake();
   }
 
   function onTouchMove(e) {
     if (!e.touches || !e.touches.length) return;
     const t = e.touches[0];
     updatePointerFromEvent(t.clientX, t.clientY);
+    wake();
   }
 
   function onLeave() {
@@ -162,6 +184,18 @@
       ctx.fill();
       ctx.globalAlpha = 1;
     }
+  }
+
+  // True once every dot has eased back close enough to its resting
+  // state (no bulge, no color tint, no offset) and the pointer isn't
+  // currently active over the area — i.e. nothing left to animate.
+  function allSettled() {
+    if (pointer.active) return false;
+    for (let i = 0; i < dots.length; i++) {
+      const d = dots[i];
+      if (d.z > SETTLE_EPSILON || d.colorT > SETTLE_EPSILON) return false;
+    }
+    return true;
   }
 
   function step(now) {
@@ -225,6 +259,15 @@
       ctx.globalAlpha = 1;
     }
 
+    if (allSettled()) {
+      // Nothing left to animate — stop calling requestAnimationFrame
+      // until a pointer/touch move wakes it back up. Saves CPU/battery,
+      // most noticeably on phones where this loop would otherwise run
+      // forever untouched.
+      rafId = null;
+      return;
+    }
+
     rafId = requestAnimationFrame(step);
   }
 
@@ -242,7 +285,16 @@
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
       buildGrid();
-      if (prefersReducedMotion) drawStillGrid();
+      if (prefersReducedMotion) {
+        drawStillGrid();
+      } else {
+        // The loop may have stopped itself after settling before this
+        // resize/orientation-change happened; buildGrid() just replaced
+        // `dots` with brand-new objects, so force at least one frame to
+        // draw them instead of leaving the canvas blank until the next
+        // pointer move.
+        wake();
+      }
     }, 120);
   }
 
@@ -319,21 +371,25 @@
 })();
 
 /* =========================================================================
-   3) HERO IMAGE TILT (essuggest.png)
+   3) HERO IMAGE FLOAT + TILT (essuggest.png)
    ---------------------------------------------------------------------
-   The hero keyboard art tilts toward the cursor like a physical card,
-   using the exact same eased/lerp approach as the dot grid in section 1
-   above: on every mousemove we record a *target* rotation, then a
-   requestAnimationFrame loop eases the *current* rotation toward that
-   target a little each frame (EASE below controls how quickly). This
-   is deliberately the same technique as the dots rather than a plain
-   CSS :hover transform, so the two cursor-reactive effects on this
-   page feel consistent with each other instead of like two different
-   libraries bolted together.
+   Split into two layers so the CSS float animation and the JS tilt
+   loop don't fight over the same element's transform:
+     - .hero-float (outer, in index.html) — pure CSS keyframe bob,
+       runs constantly, untouched by JS.
+     - .hero-tilt-img (inner <img>, this script) — tilts toward the
+       cursor like a physical card. No bulge/scale or glow — plain
+       tilt only.
+
+   Mouse-only on purpose: there's no touch handler here, so on phones
+   and tablets the image just holds still (aside from the CSS float) —
+   there's no cursor to tilt toward, and rigging this to touch-drag
+   would fight normal page scrolling.
 
    Respects prefers-reduced-motion the same way section 1 does — for
    anyone with that OS setting on, this whole effect is skipped and the
-   image just sits still.
+   image just sits still. The CSS float animation is separately
+   disabled in animationLp.css under the same media query.
 ========================================================================= */
 (function heroTilt() {
   const wrap = document.querySelector(".hero-tilt-wrap");
@@ -346,12 +402,11 @@
   if (prefersReducedMotion) return; // leave the image completely static
 
   // ---- Tunables ---------------------------------------------------------
-  const MAX_TILT = 10;        // degrees of rotation at the very edge of the image
-  const MAX_LIFT_SCALE = 1.04; // slight scale-up while the cursor is over it
-  const EASE = 0.12;          // 0-1, lower = slower/smoother trailing motion
+  const MAX_TILT = 10;   // degrees of rotation at the edge of the image
+  const EASE = 0.12;     // 0-1, lower = slower/smoother trailing motion
 
-  let target = { rx: 0, ry: 0, scale: 1 };
-  let current = { rx: 0, ry: 0, scale: 1 };
+  let target = { rx: 0, ry: 0 };
+  let current = { rx: 0, ry: 0 };
   let rafId = null;
   let hovering = false;
 
@@ -364,7 +419,6 @@
     // edge tilts toward the viewer (hence the minus sign on rx).
     target.ry = (offsetX - 0.5) * MAX_TILT * 2;
     target.rx = -(offsetY - 0.5) * MAX_TILT * 2;
-    target.scale = MAX_LIFT_SCALE;
   }
 
   function onEnter() {
@@ -374,7 +428,7 @@
 
   function onLeave() {
     hovering = false;
-    target = { rx: 0, ry: 0, scale: 1 };
+    target = { rx: 0, ry: 0 };
     // Don't stop the rAF loop here — tick() keeps it running until the
     // image has actually eased back to neutral, otherwise it would
     // just snap flat instead of settling smoothly.
@@ -383,15 +437,11 @@
   function tick() {
     current.rx += (target.rx - current.rx) * EASE;
     current.ry += (target.ry - current.ry) * EASE;
-    current.scale += (target.scale - current.scale) * EASE;
 
-    img.style.transform =
-      `rotateX(${current.rx}deg) rotateY(${current.ry}deg) scale(${current.scale})`;
+    img.style.transform = `rotateX(${current.rx}deg) rotateY(${current.ry}deg)`;
 
     const settled =
-      Math.abs(current.rx) < 0.01 &&
-      Math.abs(current.ry) < 0.01 &&
-      Math.abs(current.scale - 1) < 0.001;
+      Math.abs(current.rx) < 0.01 && Math.abs(current.ry) < 0.01;
 
     if (hovering || !settled) {
       rafId = requestAnimationFrame(tick);
@@ -404,3 +454,5 @@
   wrap.addEventListener("mousemove", onMouseMove, { passive: true });
   wrap.addEventListener("mouseleave", onLeave);
 })();
+
+

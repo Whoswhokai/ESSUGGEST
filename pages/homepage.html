@@ -19,7 +19,7 @@
        sticky nav, so this just scrolls away with the page.
   ========================================================== -->
   <div class="bg-green-950 text-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 h-11 flex items-center gap-3 sm:gap-5 text-sm">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 h-11 flex items-center gap-2 sm:gap-5 text-sm">
 
       <a href="#hero" aria-label="Go to home section" class="shrink-0 flex items-center">
         <img src="../assets/ESSU LOGO no bg.png" alt="ESSU seal" class="w-6 h-6 sm:w-9 sm:h-9 shrink-0 object-contain">
@@ -27,10 +27,11 @@
 
       <span class="h-5 sm:h-6 w-px bg-white/30" aria-hidden="true"></span>
 
-      <nav class="flex items-center gap-3 sm:gap-8 text-white/90 text-xs sm:text-sm whitespace-nowrap">
+      <nav class="flex items-center gap-2 sm:gap-8 text-white/90 text-xs sm:text-sm whitespace-nowrap">
         <a href="/pages/aboutus.html" class="hover:text-white transition-colors duration-200 font-dm">About Us</a>
         <a href="/pages/contactus.html" class="hover:text-white transition-colors duration-200 font-dm">Contact Us</a>
       </nav>
+     
     </div>
   </div>
 
@@ -100,12 +101,16 @@
 
       <div class="scroll-reveal scroll-reveal-delay-1">
         <!-- Hero art (essuggest.png) tilts toward the cursor — see the
-             "HERO IMAGE TILT" section in animationLp.css and dotted.js.
-             hero-tilt-wrap provides the 3D perspective + clips the
-             slight hover scale to the rounded corners; hero-tilt-img is
-             what dotted.js actually rotates every frame. -->
+             "HERO IMAGE FLOAT + TILT" section in animationLp.css and
+             dotted.js. hero-tilt-wrap provides the 3D perspective +
+             clips to the rounded corners; hero-float is a CSS-only
+             bobbing layer (so the JS tilt loop doesn't fight a CSS
+             animation on the same element); hero-tilt-img is what
+             dotted.js actually rotates every frame. -->
         <div class="hero-tilt-wrap w-full aspect-4/3 rounded-3xl flex items-center justify-center">
-          <img src="/assets/essuggest.png" alt="essuggest keyboard art" class="hero-tilt-img w-full h-full object-cover rounded-3xl">
+          <div class="hero-float">
+            <img src="/assets/essuggest.png" alt="essuggest keyboard art" class="hero-tilt-img w-full h-full object-cover rounded-3xl">
+          </div>
         </div>
       </div>
     </section>
@@ -253,7 +258,7 @@
       <div class="scroll-reveal scroll-reveal-delay-1">
         <h3 class="font-dm font-bold mb-4">Site Map</h3>
         <ul class="space-y-2 text-white/85 text-sm">
-          <li><a href="#" class="hover:text-white transition-colors duration-200">Get Started</a></li>
+          <li><a href="#" class="hover:text-white transition-colors duration-200">Home</a></li>
           <li><a href="#two-ways" class="hover:text-white transition-colors duration-200">Two ways to be heard</a></li>
           <li><a href="#conarea" class="hover:text-white transition-colors duration-200">How it works</a></li>
           <li><a href="/auth/SignUp.html" class="hover:text-white transition-colors duration-200">Create your Account</a></li>
@@ -297,6 +302,8 @@
       </div>
     </div>
   </footer>
+
+  
 
   <script src="/pages/dotted.js"></script>
 </body>

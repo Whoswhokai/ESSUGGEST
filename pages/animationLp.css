@@ -20,6 +20,25 @@ html {
 }
 
 /* -----------------------------------------------------------------------
+   MOBILE SAFETY NET
+   A defensive guard against horizontal scroll on small screens (e.g. any
+   future fixed-width/negative-margin element slipping past the
+   viewport). Only clips the x-axis so position: sticky on #site-header
+   is unaffected. Also removes the grey tap-flash Android/iOS browsers
+   show on links/buttons, since .btn-pop already provides its own press
+   feedback.
+----------------------------------------------------------------------- */
+html,
+body {
+  overflow-x: clip;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* -----------------------------------------------------------------------
    ACCESSIBILITY — skip link + visible keyboard focus
 ----------------------------------------------------------------------- */
 .skip-link {
@@ -168,24 +187,54 @@ summary:focus-visible {
 }
 
 /* -----------------------------------------------------------------------
-   HERO IMAGE TILT (essuggest.png)
-   The keyboard art tilts toward the cursor like a physical card. The
-   actual rotation math lives in dotted.js (it needs the live cursor
-   position, which CSS can't read) — this just sets up the 3D staging:
-   .hero-tilt-wrap is the perspective context AND clips the slight
-   hover scale to the image's rounded corners (without overflow:hidden
-   here, a scaled-up image would spill past the rounded frame at the
-   edges). .hero-tilt-img is the element dotted.js actually rotates.
+   HERO IMAGE FLOAT + TILT (essuggest.png)
+   .hero-tilt-wrap: the perspective context AND clips the hover bulge
+   to the rounded frame (without overflow:hidden here, a scaled-up
+   image would spill past the rounded corners at the edges).
 
-   No CSS `transition` on transform here on purpose — dotted.js already
-   eases the rotation itself frame-by-frame (same lerp approach as the
-   dot grid above), and layering a CSS transition on top of that would
-   just add lag on top of lag. The box-shadow transition below is fine
-   since that only changes on hover/leave, not continuously.
+   .hero-float: a pure-CSS bobbing layer, wrapping the <img>. This is
+   deliberately separate from .hero-tilt-img — dotted.js writes a new
+   inline `transform` on .hero-tilt-img every animation frame while
+   hovering/settling, and an element can only have one `transform`, so
+   a CSS keyframe animation placed directly on that same element would
+   get silently overwritten by the JS and never actually show. Putting
+   the float on the parent instead lets both run at once: this layer
+   bobs up and down on its own slow loop the whole time, while the
+   child <img> underneath gets tilted/bulged by JS on hover, and
+   `transform-style: preserve-3d` keeps the inner rotateX/rotateY
+   reading correctly through the outer translateY.
+
+   .hero-tilt-img: what dotted.js actually rotates. No CSS `transition`
+   on transform here on purpose — dotted.js already eases the rotation
+   itself frame-by-frame (same lerp approach as the dot grid above),
+   and layering a CSS transition on top of that would just add lag on
+   top of lag. The box-shadow transition below is fine since that only
+   changes on hover/leave, not continuously. Note: dotted.js only wires
+   this up via mouse events, so on touch devices the image simply stays
+   flat — that's expected, not a bug.
 ----------------------------------------------------------------------- */
 .hero-tilt-wrap {
   perspective: 1000px;
   overflow: hidden;
+}
+
+.hero-float {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: hero-float-bob 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes hero-float-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
 }
 
 .hero-tilt-img {
@@ -196,16 +245,20 @@ summary:focus-visible {
   transition: box-shadow 0.4s ease;
 }
 
-
-
 @media (prefers-reduced-motion: reduce) {
   .hero-tilt-img {
     transform: none !important;
+  }
+  .hero-float {
+    animation: none !important;
   }
 }
 
 /* -----------------------------------------------------------------------
    Buttons — a soft, tactile "pop" on hover/press
+   touch-action: manipulation removes the ~300ms tap delay mobile
+   browsers otherwise add while waiting to see if a tap becomes a
+   double-tap zoom.
 ----------------------------------------------------------------------- */
 .btn-pop {
   display: inline-block;
@@ -213,6 +266,7 @@ summary:focus-visible {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s ease, background-color 0.2s ease;
   box-shadow: 0 0 0 rgba(22, 163, 74, 0);
+  touch-action: manipulation;
 }
 
 .btn-pop:hover {
@@ -374,3 +428,5 @@ summary:focus-visible {
 .faq-chevron {
   display: inline-block;
 }
+
+
