@@ -64,7 +64,7 @@
   const MAX_RADIUS = 6;    // dot size when cursor is on it (was 6 — bigger bulge)
   const BULGE_INFLUENCE = 220;  // px radius around cursor where dots grow/pull/shake
   const COLOR_INFLUENCE = 100;  // px radius around cursor where dots tint green (smaller than bulge)
-  const MAX_PULL = 16;   // max px a dot can be dragged toward cursor (was 16 — bigger bulge)
+  const MAX_PULL = 26;   // max px a dot can be dragged toward cursor (was 16 — bigger bulge)
   const EASE = 0.1;    // 0-1, lower = slower/smoother motion
   const MAX_JITTER = 2;  // px of shake at the very center of the cursor
   const SETTLE_EPSILON = 0.02; // below this, a dot's bulge/color are close enough to 0 to call it "at rest"
