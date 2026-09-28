@@ -25,6 +25,14 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ---------- Loader settings (ldrs <l-mirage>) — same as Login.js ---------- */
+// The <l-mirage> element is registered by the script tag in the HTML.
+const LOADER_HTML = `<l-mirage size="50" speed="2.5" color="white"></l-mirage>`;
+// Firebase can answer in ~100ms, which would make the loader flash and vanish.
+// This keeps it visible for at least this long so the animation is actually seen.
+const MIN_LOADING_MS = 800;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function eye(e) {
   const wrapper = e.target.closest(".relative");
   const input = wrapper.querySelector("input");
@@ -143,12 +151,17 @@ async function SignUp(e) {
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const originalBtnText = submitBtn ? submitBtn.textContent : "";
+
+  // Show the loader inside the button (the message stays empty while loading)
+  const startedAt = Date.now();
+  const ensureMinLoading = () =>
+    wait(Math.max(0, MIN_LOADING_MS - (Date.now() - startedAt)));
+
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = "Creating account...";
+    submitBtn.setAttribute("aria-label", "Creating account");
+    submitBtn.innerHTML = LOADER_HTML;
   }
-  message.textContent = "Creating your account, please wait...";
-  message.style.color = "Gray";
 
   try {
     // --- Step 1: Create the Auth account ---
@@ -163,14 +176,24 @@ async function SignUp(e) {
       lastLogin: serverTimestamp(),
     });
 
+    // Loader finishes, THEN the result message appears
+    await ensureMinLoading();
+
     message.textContent = "Account created successfully";
     message.style.color = "Green";
-    if (submitBtn) submitBtn.textContent = "Redirecting to login...";
+    if (submitBtn) {
+      submitBtn.removeAttribute("aria-label");
+      submitBtn.textContent = "Redirecting to login..."; // replaces the loader
+    }
 
     setTimeout(() => {
-      window.location.href = "../auth/Login.html";
+      // File is named LogIn.html — casing must match exactly on Cloudflare
+      window.location.href = "../auth/LogIn.html";
     }, 500);
   } catch (error) {
+    // Loader finishes, THEN the error message appears
+    await ensureMinLoading();
+
     message.style.color = "Red";
     switch (error.code) {
       case "auth/email-already-in-use":
@@ -189,7 +212,10 @@ async function SignUp(e) {
         message.textContent = "Something went wrong: " + error.message;
         console.log(error);
     }
-    if (submitBtn) submitBtn.textContent = originalBtnText;
+    if (submitBtn) {
+      submitBtn.removeAttribute("aria-label");
+      submitBtn.textContent = originalBtnText; // replaces the loader
+    }
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }

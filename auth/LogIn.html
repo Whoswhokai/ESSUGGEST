@@ -92,10 +92,11 @@
         <p id="message" class="font-dm font-light h-5"></p>
 
         <div class="flex justify-center items-center">
+          <!-- flex + items-center + justify-center keep the loader centered in the button -->
           <button
             id="submit"
             type="submit"
-            class="bg-green-600 text-white w-90 h-10 rounded-md hover:bg-green-700 transition duration-300 font-poppins text-md font-bold"
+            class="flex items-center justify-center bg-green-600 text-white w-90 h-10 rounded-md hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-90 transition duration-300 font-poppins text-md font-bold"
           >
             Log In
           </button>
@@ -123,6 +124,9 @@
         <source src="/assets/moGraph (login).webm" />
       </video>
     </div>
+
+    <!-- ldrs: registers the <l-mirage> loader (must come before Login.js is used) -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/mirage.js"></script>
     <script type="module" src="/auth/Login.js" defer></script>
 
     <!--kaiser was here-->

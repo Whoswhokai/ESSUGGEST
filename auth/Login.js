@@ -26,6 +26,14 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ---------- Loader settings (ldrs <l-mirage>) ---------- */
+// The <l-mirage> element is registered by the script tag in the HTML.
+const LOADER_HTML = `<l-mirage size="50" speed="2.5" color="white"></l-mirage>`;
+// Firebase can answer in ~100ms, which would make the loader flash and vanish.
+// This keeps it visible for at least this long so the animation is actually seen.
+const MIN_LOADING_MS = 800;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /* ---------- Password visibility toggle ---------- */
 function eye(e) {
   const wrapper = e.target.closest(".relative");
@@ -90,9 +98,16 @@ async function Login(e) {
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const originalBtnText = submitBtn ? submitBtn.textContent : "";
+
+  // Show the loader inside the button (the message stays empty while loading)
+  const startedAt = Date.now();
+  const ensureMinLoading = () =>
+    wait(Math.max(0, MIN_LOADING_MS - (Date.now() - startedAt)));
+
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = "Logging in...";
+    submitBtn.setAttribute("aria-label", "Logging in");
+    submitBtn.innerHTML = LOADER_HTML;
   }
 
   try {
@@ -112,14 +127,23 @@ async function Login(e) {
     setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true })
       .catch((err) => console.log("lastLogin update failed:", err));
 
+    // Loader finishes, THEN the result message appears
+    await ensureMinLoading();
+
     message.textContent = "Login Successful";
     message.style.color = "Green";
-    if (submitBtn) submitBtn.textContent = "Redirecting...";
+    if (submitBtn) {
+      submitBtn.removeAttribute("aria-label");
+      submitBtn.textContent = "Redirecting..."; // replaces the loader
+    }
 
     setTimeout(() => {
       window.location.href = "../main.html";
     }, 300);
   } catch (error) {
+    // Loader finishes, THEN the error message appears
+    await ensureMinLoading();
+
     message.style.color = "Red";
     switch (error.code) {
       case "auth/invalid-email":
@@ -145,7 +169,10 @@ async function Login(e) {
         message.textContent = "Something went wrong: " + error.message;
         console.log(error);
     }
-    if (submitBtn) submitBtn.textContent = originalBtnText;
+    if (submitBtn) {
+      submitBtn.removeAttribute("aria-label");
+      submitBtn.textContent = originalBtnText; // replaces the loader
+    }
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
